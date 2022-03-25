@@ -1,81 +1,95 @@
 import React, { useState } from "react";
 import { backlog, in_progress, completed } from "../../data/tasks";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import "../../css/tasksPage.css";
 
 const TasksPage = () => {
-  const [backlogTasks, setBacklogTasks] = useState(backlog);
-  const [inProgressTasks, setInProgressTasks] = useState([]);
-  const [completedTasks, setCompletedTasks] = useState([]);
-  const onDragEndBacklog = (result) => {
+  const [tasks, setTasks] = useState({
+    backlog: backlog,
+    inProgress: [],
+    completed: [],
+  });
+  const onDragEnd = (result) => {
     if (!result.destination) {
+      console.log("No destination");
+      console.log(result);
       return;
     }
-    const items = Array.from(backlogTasks);
-    const [reorderItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderItem);
-    setBacklogTasks(items);
-  };
-  const onDragEndInProgress = (result) => {
-    if (!result.destination) {
-      return;
-    }
-    const items = Array.from(inProgressTasks);
-    const [reorderItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderItem);
-    setInProgressTasks(items);
-  };
-  const onDragEndCompleted = (result) => {
-    if (!result.destination) {
-      return;
-    }
-    const items = Array.from(completedTasks);
-    const [reorderItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderItem);
-    setCompletedTasks(items);
-  };
-  const startTask = (task) => {
-    setInProgressTasks([...inProgressTasks, task]);
-    var newBacklog = [];
-    backlogTasks.map((backlogTask) => {
-      if (backlogTask != task) {
-        newBacklog.push(backlogTask);
+    console.log(result);
+    if (result.source.droppableId == result.destination.droppableId) {
+      var items = [];
+      if (result.source.droppableId == "backlog") {
+        items = Array.from(tasks.backlog);
+        const [reorderItem] = items.splice(result.source.index, 1);
+        items.splice(result.destination.index, 0, reorderItem);
+        setTasks({
+          backlog: items,
+          inProgress: tasks.inProgress,
+          completed: tasks.completed,
+        });
+      } else if (result.source.droppableId == "inProgress") {
+        items = Array.from(tasks.inProgress);
+        const [reorderItem] = items.splice(result.source.index, 1);
+        items.splice(result.destination.index, 0, reorderItem);
+        setTasks({
+          backlog: tasks.backlog,
+          inProgress: items,
+          completed: tasks.completed,
+        });
+      } else if (result.source.droppableId == "completed") {
+        items = Array.from(tasks.completed);
+        const [reorderItem] = items.splice(result.source.index, 1);
+        items.splice(result.destination.index, 0, reorderItem);
+        setTasks({
+          backlog: tasks.backlog,
+          inProgress: tasks.inProgress,
+          completed: items,
+        });
       }
-    });
-    setBacklogTasks(newBacklog);
-  };
-  const completeTask = (task) => {
-    setCompletedTasks([...completedTasks, task]);
-    var newInProgress = [];
-    inProgressTasks.map((inProgressTask) => {
-      if (inProgressTask != task) {
-        newInProgress.push(inProgressTask);
-      }
-    });
-    setInProgressTasks(newInProgress);
+    } else {
+      var startArr = tasks[result.source.droppableId];
+      var endArr = tasks[result.destination.droppableId];
+      const [reorderItem] = startArr.splice(result.source.index, 1);
+      endArr.splice(result.destination.index, 0, reorderItem);
+      tasks[result.source.droppableId] = startArr;
+      tasks[result.destination.droppableId] = endArr;
+      setTasks(tasks);
+    }
   };
   const deleteTask = (task) => {
     var newCompleted = [];
-    completedTasks.map((completedTask) => {
+    tasks.completed.map((completedTask) => {
       if (completedTask != task) {
         newCompleted.push(completedTask);
       }
     });
-    setCompletedTasks(newCompleted);
+    setTasks({
+      backlog: tasks.backlog,
+      inProgress: tasks.inProgress,
+      completed: newCompleted,
+    });
   };
   return (
     <>
-      <div className="row">
-        <div className="col-md-4">
-          <h6>Backlog</h6>
-          <DragDropContext onDragEnd={onDragEndBacklog}>
-            <Droppable droppableId="backlog">
-              {(provided) => (
+      <div className="row d-flex justify-content-between">
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="backlog">
+            {(provided) => (
+              <div
+                className="col-md-3 tasks-col"
+                style={{
+                  minHeight: "200px",
+                  borderWidth: "1px",
+                  border: "solid",
+                }}
+              >
+                <h6>Backlog</h6>
                 <ul
                   className="list-group"
                   {...provided.droppableProps}
                   ref={provided.innerRef}
                 >
-                  {backlogTasks.map((task, index) => {
+                  {tasks.backlog.map((task, index) => {
                     return (
                       <>
                         <Draggable
@@ -91,12 +105,6 @@ const TasksPage = () => {
                               ref={provided.innerRef}
                             >
                               {task.title}
-                              <button
-                                className="btn btn-default btn-warning"
-                                onClick={() => startTask(task)}
-                              >
-                                Start
-                              </button>
                             </li>
                           )}
                         </Draggable>
@@ -105,21 +113,26 @@ const TasksPage = () => {
                   })}
                   {provided.placeholder}
                 </ul>
-              )}
-            </Droppable>
-          </DragDropContext>
-        </div>
-        <div className="col-md-4">
-          <h6>In Progress</h6>
-          <DragDropContext onDragEnd={onDragEndInProgress}>
-            <Droppable droppableId="inProgress">
-              {(provided) => (
+              </div>
+            )}
+          </Droppable>
+          <Droppable droppableId="inProgress">
+            {(provided) => (
+              <div
+                className="col-md-3 tasks-col"
+                style={{
+                  minHeight: "200px",
+                  borderWidth: "1px",
+                  border: "solid",
+                }}
+              >
+                <h6>In Progress</h6>
                 <ul
                   className="list-group"
                   {...provided.droppableProps}
                   ref={provided.innerRef}
                 >
-                  {inProgressTasks.map((task, index) => {
+                  {tasks.inProgress.map((task, index) => {
                     return (
                       <>
                         <Draggable
@@ -135,12 +148,6 @@ const TasksPage = () => {
                               ref={provided.innerRef}
                             >
                               {task.title}
-                              <button
-                                className="btn btn-default btn-success"
-                                onClick={() => completeTask(task)}
-                              >
-                                Done
-                              </button>
                             </li>
                           )}
                         </Draggable>
@@ -149,21 +156,26 @@ const TasksPage = () => {
                   })}
                   {provided.placeholder}
                 </ul>
-              )}
-            </Droppable>
-          </DragDropContext>
-        </div>
-        <div className="col-md-4">
-          <h6>Completed</h6>
-          <DragDropContext onDragEnd={onDragEndCompleted}>
-            <Droppable droppableId="completed">
-              {(provided) => (
+              </div>
+            )}
+          </Droppable>
+          <Droppable droppableId="completed">
+            {(provided) => (
+              <div
+                className="col-md-3 tasks-col"
+                style={{
+                  minHeight: "200px",
+                  borderWidth: "1px",
+                  border: "solid",
+                }}
+              >
+                <h6>Completed</h6>
                 <ul
                   className="list-group"
                   {...provided.droppableProps}
                   ref={provided.innerRef}
                 >
-                  {completedTasks.map((task, index) => {
+                  {tasks.completed.map((task, index) => {
                     return (
                       <>
                         <Draggable
@@ -193,10 +205,10 @@ const TasksPage = () => {
                   })}
                   {provided.placeholder}
                 </ul>
-              )}
-            </Droppable>
-          </DragDropContext>
-        </div>
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
       </div>
     </>
   );
