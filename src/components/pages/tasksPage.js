@@ -79,8 +79,6 @@ const TasksPage = () => {
                 className="col-md-3 tasks-col"
                 style={{
                   minHeight: "200px",
-                  borderWidth: "1px",
-                  border: "solid",
                 }}
               >
                 <h6>Backlog</h6>
@@ -99,7 +97,7 @@ const TasksPage = () => {
                         >
                           {(provided) => (
                             <li
-                              className="list-group-item d-flex justify-content-between mt-3"
+                              className="list-group-item list-group-item-danger d-flex justify-content-between mt-3 task"
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                               ref={provided.innerRef}
@@ -122,8 +120,6 @@ const TasksPage = () => {
                 className="col-md-3 tasks-col"
                 style={{
                   minHeight: "200px",
-                  borderWidth: "1px",
-                  border: "solid",
                 }}
               >
                 <h6>In Progress</h6>
@@ -142,7 +138,7 @@ const TasksPage = () => {
                         >
                           {(provided) => (
                             <li
-                              className="list-group-item d-flex justify-content-between mt-3"
+                              className="list-group-item d-flex list-group-item-warning justify-content-between mt-3 task"
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                               ref={provided.innerRef}
@@ -165,8 +161,6 @@ const TasksPage = () => {
                 className="col-md-3 tasks-col"
                 style={{
                   minHeight: "200px",
-                  borderWidth: "1px",
-                  border: "solid",
                 }}
               >
                 <h6>Completed</h6>
@@ -185,18 +179,12 @@ const TasksPage = () => {
                         >
                           {(provided) => (
                             <li
-                              className="list-group-item d-flex justify-content-between mt-3"
+                              className="list-group-item d-flex list-group-item-success justify-content-between mt-3 task"
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                               ref={provided.innerRef}
                             >
                               {task.title}
-                              <button
-                                className="btn btn-default btn-danger"
-                                onClick={() => deleteTask(task)}
-                              >
-                                Delete
-                              </button>
                             </li>
                           )}
                         </Draggable>
