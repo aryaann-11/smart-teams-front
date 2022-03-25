@@ -1,14 +1,40 @@
-import React, { useState } from "react";
-import { backlog, in_progress, completed } from "../../data/tasks";
+import React, { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import "../../css/tasksPage.css";
+import axios from "axios";
 
 const TasksPage = () => {
   const [tasks, setTasks] = useState({
-    backlog: backlog,
+    backlog: [],
     inProgress: [],
     completed: [],
   });
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    axios
+      .get("http://localhost:8000/tasks/")
+      .then((res) => {
+        console.log(res.data);
+        var backlogTasks = [];
+        var inProgressTasks = [];
+        var completedTasks = [];
+        res.data.tasks.map((task) => {
+          if (task.status == -1) {
+            backlogTasks.push(task);
+          } else if (task.status == 0) {
+            inProgressTasks.push(task);
+          } else if (task.status == 1) {
+            completedTasks.push(task);
+          }
+        });
+        setTasks({
+          backlog: backlogTasks,
+          inProgress: inProgressTasks,
+          completed: completedTasks,
+        });
+        setIsLoading(false);
+      })
+      .catch((err) => console.log(err));
+  }, []);
   const onDragEnd = (result) => {
     if (!result.destination) {
       console.log("No destination");
@@ -50,30 +76,45 @@ const TasksPage = () => {
       var startArr = tasks[result.source.droppableId];
       var endArr = tasks[result.destination.droppableId];
       const [reorderItem] = startArr.splice(result.source.index, 1);
+      const droppedAt = result.destination.droppableId;
+      var newStatus = -1;
+      if (droppedAt == "backlog") {
+        newStatus = -1;
+      } else if (droppedAt == "inProgress") {
+        newStatus = 0;
+      } else if (droppedAt == "completed") {
+        newStatus = 1;
+      }
+      reorderItem.status = newStatus;
       endArr.splice(result.destination.index, 0, reorderItem);
       tasks[result.source.droppableId] = startArr;
       tasks[result.destination.droppableId] = endArr;
       setTasks(tasks);
     }
   };
-  const deleteTask = (task) => {
-    var newCompleted = [];
-    tasks.completed.map((completedTask) => {
-      if (completedTask != task) {
-        newCompleted.push(completedTask);
-      }
-    });
-    setTasks({
-      backlog: tasks.backlog,
-      inProgress: tasks.inProgress,
-      completed: newCompleted,
-    });
+  const handleSave = () => {
+    console.log(tasks);
+    const allTasks = [
+      ...tasks.backlog,
+      ...tasks.inProgress,
+      ...tasks.completed,
+    ];
+    axios
+      .post("http://localhost:8000/tasks/update/", { tasks: allTasks })
+      .then((res) => {
+        alert(res.data.message);
+        console.log(res.data.message);
+      })
+      .catch((err) => {
+        alert("Could not save task lists successfully");
+        console.log(err);
+      });
   };
   return (
     <>
       <div className="row d-flex justify-content-between">
         <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="backlog">
+          <Droppable droppableId="backlog" key={0}>
             {(provided) => (
               <div
                 className="col-md-3 tasks-col"
@@ -91,8 +132,8 @@ const TasksPage = () => {
                     return (
                       <>
                         <Draggable
-                          key={task.id}
-                          draggableId={task.id}
+                          key={task.id.toString()}
+                          draggableId={task.id.toString()}
                           index={index}
                         >
                           {(provided) => (
@@ -114,7 +155,7 @@ const TasksPage = () => {
               </div>
             )}
           </Droppable>
-          <Droppable droppableId="inProgress">
+          <Droppable droppableId="inProgress" key={1}>
             {(provided) => (
               <div
                 className="col-md-3 tasks-col"
@@ -132,8 +173,8 @@ const TasksPage = () => {
                     return (
                       <>
                         <Draggable
-                          key={task.id}
-                          draggableId={task.id}
+                          key={task.id.toString()}
+                          draggableId={task.id.toString()}
                           index={index}
                         >
                           {(provided) => (
@@ -155,7 +196,7 @@ const TasksPage = () => {
               </div>
             )}
           </Droppable>
-          <Droppable droppableId="completed">
+          <Droppable droppableId="completed" key={2}>
             {(provided) => (
               <div
                 className="col-md-3 tasks-col"
@@ -173,8 +214,8 @@ const TasksPage = () => {
                     return (
                       <>
                         <Draggable
-                          key={task.id}
-                          draggableId={task.id}
+                          key={task.id.toString()}
+                          draggableId={task.id.toString()}
                           index={index}
                         >
                           {(provided) => (
@@ -197,6 +238,16 @@ const TasksPage = () => {
             )}
           </Droppable>
         </DragDropContext>
+      </div>
+      <div className="row d-flex justify-content-center mt-5">
+        <div className="col-md-4 d-flex justify-content-center">
+          <button
+            className="btn btn-outline-success btn-lg"
+            onClick={handleSave}
+          >
+            Save
+          </button>
+        </div>
       </div>
     </>
   );
