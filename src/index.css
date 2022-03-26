@@ -12,3 +12,12 @@ code {
     monospace;
 }
 
+.backlog-task{
+  border-bottom: 5px solid rgba(240, 14, 14, 0.7);
+}
+.in-progress-task{
+  border-bottom: 5px solid rgba(240, 168, 14, 0.7);
+}
+.completed-task{
+  border-bottom: 5px solid rgba(40, 145, 8, 0.7);
+}

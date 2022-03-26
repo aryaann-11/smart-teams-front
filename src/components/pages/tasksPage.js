@@ -8,7 +8,35 @@ const TasksPage = () => {
     inProgress: [],
     completed: [],
   });
+  const [newTask, setNewTask] = useState("Untitled");
   const [isLoading, setIsLoading] = useState(true);
+  const handleChange = (e) => {
+    setNewTask(e.target.value);
+  };
+  const handleSubmit = () => {
+    if (newTask == "") {
+      alert("Please enter a valid title for this task");
+      return;
+    }
+    console.log(newTask);
+    axios
+      .post("http://localhost:8000/tasks/add/", {
+        task: { title: newTask },
+      })
+      .then((res) => {
+        console.log(res.data.message);
+        setTasks({
+          backlog: [...tasks.backlog, res.data.task],
+          inProgress: tasks.inProgress,
+          completed: tasks.completed,
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        alert("Could not add task");
+      });
+  };
+
   useEffect(() => {
     axios
       .get("http://localhost:8000/tasks/")
@@ -112,6 +140,21 @@ const TasksPage = () => {
   };
   return (
     <>
+      <div className="mb-3">
+        <label for="taskInput" className="form-label">
+          Task Title
+        </label>
+        <input
+          type="text"
+          className="form-control"
+          id="taskInput"
+          value={newTask}
+          onChange={handleChange}
+        ></input>
+        <button className="btn btn-primary mt-2" onClick={handleSubmit}>
+          Submit
+        </button>
+      </div>
       <div className="row d-flex justify-content-between">
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="backlog" key={0}>
@@ -138,7 +181,7 @@ const TasksPage = () => {
                         >
                           {(provided) => (
                             <li
-                              className="list-group-item list-group-item-danger d-flex justify-content-between mt-3 task"
+                              className="list-group-item d-flex justify-content-between mt-1 task backlog-task"
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                               ref={provided.innerRef}
@@ -179,7 +222,7 @@ const TasksPage = () => {
                         >
                           {(provided) => (
                             <li
-                              className="list-group-item d-flex list-group-item-warning justify-content-between mt-3 task"
+                              className="list-group-item d-flex justify-content-between mt-1 task in-progress-task"
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                               ref={provided.innerRef}
@@ -220,7 +263,7 @@ const TasksPage = () => {
                         >
                           {(provided) => (
                             <li
-                              className="list-group-item d-flex list-group-item-success justify-content-between mt-3 task"
+                              className="list-group-item d-flex justify-content-between mt-1 task completed-task"
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                               ref={provided.innerRef}
